@@ -789,42 +789,106 @@
 
   </script>
 
-  <div style="margin: 50px auto; max-width: 700px; background: #1e1e1e; padding: 20px; border-radius: 15px; color: white;">
-    <h2 style="text-align:center; margin-bottom: 15px;">🔥 Everyday Must-Do Tracker</h2>
-    <p style="text-align:center; font-size:14px; color:#ccc;">Отмечай галочкой выполненные задачи — прогресс сохранится автоматически</p>
+  <!-- Кнопка вызова трекера -->
+    <button id="trackerBtn" style="position:fixed; top:20px; left:20px; background:#333; color:white; border:none; padding:10px 20px; border-radius:10px; cursor:pointer;">📅 Everyday Tracker</button>
 
-    <div id="mustDoList" style="margin-top:20px; display:flex; flex-direction:column; gap:10px;">
-        <label><input type="checkbox" class="mustdo" data-key="english"> Учить английский (C1 путь)</label>
+    <!-- Модальное окно трекера -->
+    <div id="trackerModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000;">
+    <div style="background:#1e1e1e; color:white; margin:5% auto; padding:20px; width:80%; max-width:700px; border-radius:15px;">
+        <h2 style="text-align:center;">🔥 Everyday Must-Do</h2>
+        <div id="mustDoList" style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
+        <label><input type="checkbox" class="mustdo" data-key="english"> Учить английский (C1)</label>
         <label><input type="checkbox" class="mustdo" data-key="project"> Работать над проектом по специальности</label>
-        <label><input type="checkbox" class="mustdo" data-key="miniProject"> Делать мини-задачи или практику</label>
-        <label><input type="checkbox" class="mustdo" data-key="study"> Учёба и конспекты по предметам</label>
-        <label><input type="checkbox" class="mustdo" data-key="sport"> Спорт или разминка (спина, тело, фокус)</label>
-        <label><input type="checkbox" class="mustdo" data-key="reflection"> Вечерний анализ: что сделал, что улучшить</label>
-    </div>
+        <label><input type="checkbox" class="mustdo" data-key="miniProject"> Делать мини-практику</label>
+        <label><input type="checkbox" class="mustdo" data-key="study"> Учёба и конспекты</label>
+        <label><input type="checkbox" class="mustdo" data-key="sport"> Спорт / разминка</label>
+        <label><input type="checkbox" class="mustdo" data-key="reflection"> Вечерний анализ</label>
+        </div>
 
-    <button id="resetMustDo" style="margin-top:20px; padding:10px 20px; border:none; border-radius:10px; background:#ff4444; color:white; cursor:pointer;">♻️ Сбросить за день</button>
-  </div>
+        <div id="trackerStats" style="margin-top:25px; border-top:1px solid #555; padding-top:20px; display:none;">
+        <h3 style="text-align:center;">📈 Прогресс</h3>
+        <p id="streakDisplay" style="text-align:center;">🔥 Стрик: 0 дней подряд</p>
+        <div id="weekHistory" style="display:flex; justify-content:center; gap:5px; margin-top:10px;"></div>
+        </div>
+
+        <button id="resetMustDo" style="margin-top:25px; padding:10px 20px; background:#ff4444; color:white; border:none; border-radius:10px; cursor:pointer;">♻️ Сбросить день</button>
+        <button id="closeTracker" style="margin-top:10px; padding:10px 20px; background:#444; color:white; border:none; border-radius:10px; cursor:pointer;">Закрыть</button>
+    </div>
+    </div>
 
     <script>
         const checkboxes = document.querySelectorAll('.mustdo');
         const storageKey = 'AzatMustDo';
+        const streakKey = 'AzatStreak';
+        const historyKey = 'AzatHistory';
 
-        // Восстанавливаем сохранённое состояние
-        const savedState = JSON.parse(localStorage.getItem(storageKey)) || {};
+        let savedState = JSON.parse(localStorage.getItem(storageKey)) || {};
+        let streak = parseInt(localStorage.getItem(streakKey)) || 0;
+        let history = JSON.parse(localStorage.getItem(historyKey)) || [];
+
+        // Восстановление состояния чекбоксов
         checkboxes.forEach(cb => {
-            cb.checked = !!savedState[cb.dataset.key];
-            cb.addEventListener('change', () => {
-            savedState[cb.dataset.key] = cb.checked;
-            localStorage.setItem(storageKey, JSON.stringify(savedState));
-            });
+        cb.checked = !!savedState[cb.dataset.key];
+        cb.addEventListener('change', updateState);
         });
+
+        function updateState() {
+        savedState = {};
+        checkboxes.forEach(cb => savedState[cb.dataset.key] = cb.checked);
+        localStorage.setItem(storageKey, JSON.stringify(savedState));
+        checkCompletion();
+        }
+
+        function checkCompletion() {
+        const allDone = Array.from(checkboxes).every(cb => cb.checked);
+        if (allDone) {
+            document.getElementById('trackerStats').style.display = 'block';
+            updateStats();
+        }
+        }
+
+        function updateStats() {
+        const today = new Date().toISOString().split('T')[0];
+        if (!history.includes(today)) {
+            streak++;
+            history.push(today);
+            if (history.length > 7) history = history.slice(-7);
+            localStorage.setItem(streakKey, streak);
+            localStorage.setItem(historyKey, JSON.stringify(history));
+        }
+
+        document.getElementById('streakDisplay').textContent = `🔥 Стрик: ${streak} дней подряд`;
+
+        const weekDiv = document.getElementById('weekHistory');
+        weekDiv.innerHTML = '';
+        for (let i = 0; i < 7; i++) {
+            const day = history[history.length - 7 + i];
+            const box = document.createElement('div');
+            box.style.width = '20px';
+            box.style.height = '20px';
+            box.style.borderRadius = '4px';
+            box.style.background = day ? '#4caf50' : '#555';
+            weekDiv.appendChild(box);
+        }
+        }
 
         // Кнопка сброса
         document.getElementById('resetMustDo').addEventListener('click', () => {
-            checkboxes.forEach(cb => cb.checked = false);
-            localStorage.removeItem(storageKey);
+        checkboxes.forEach(cb => cb.checked = false);
+        localStorage.removeItem(storageKey);
+        document.getElementById('trackerStats').style.display = 'none';
         });
+
+        // Кнопки модалки
+        document.getElementById('trackerBtn').onclick = () => {
+        document.getElementById('trackerModal').style.display = 'block';
+        checkCompletion();
+        };
+        document.getElementById('closeTracker').onclick = () => {
+        document.getElementById('trackerModal').style.display = 'none';
+        };
     </script>
+
 
 </body>
 </html>
