@@ -124,6 +124,46 @@
   </style>
 </head>
 <body>
+    <!-- Кнопка -->
+    <button id="manifestBtn" style="position: fixed; top: 20px; right: 20px; background: #222; color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; z-index: 999;">
+    ⚙️ Манифест Азата 2.0
+    </button>
+
+    <!-- Окно -->
+    <div id="manifestModal" style="display:none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index:1000;">
+        <div style="background: #fefefe; color:#111; margin: 10% auto; padding: 20px; width: 80%; max-width: 800px; border-radius: 15px; overflow-y:auto; max-height:70vh;">
+            <h2 style="text-align:center; margin-bottom: 20px;">Манифест Азата 2.0</h2>
+                <p style="white-space: pre-line; line-height: 1.6;">
+                    С этого дня я меняю мышление и режим жизни. Я больше не студент, который просто “учится”, я инженер, который строит самого себя.
+                    Я сижу на первых партах, слушаю, участвую, задаю вопросы. Мой телефон больше не ворует внимание — я направляю его на Coursera, конспекты и задачи. Я решаю всё сам, не копирую ответы. Если не понимаю — разбираюсь и спрашиваю. Я не полагаюсь на ИИ, я им управляю.
+                    Я не держусь за ленивых людей. Я ищу тех, кто хочет расти, спорить, пробовать. Я добрее и увереннее, потому что знаю, куда иду.
+                    Я делаю всё не “к дедлайну”, а когда получил задание. Не ради оценки, а ради понимания. Я всегда ищу дополнительную информацию и проверяю свои знания на практике. Я не просто учусь — я тестирую себя, как инженер тестирует систему.
+                    Каждый день я расту хотя бы на 1%. Вечером анализирую: что сделал, что не получилось, что улучшить завтра.
+
+                    Теперь у меня чёткие цели:
+                    — GPA 3.8 за семестр;
+                    — английский уровня C1;
+                    — один серьёзный проект по специальности;
+                    — несколько мини-проектов для навыков;
+                    — уверенно закрыть все предметы;
+                    — найти друзей с теми же амбициями;
+                    — иметь стабильный доход;
+                    — поддерживать форму и здоровье;
+                    — получить военный билет.
+                </p>
+            <button id="closeManifest" style="margin-top:20px; background:#222; color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer;">Закрыть</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('manifestBtn').onclick = () => {
+            document.getElementById('manifestModal').style.display = 'block';
+        };
+        document.getElementById('closeManifest').onclick = () => {
+            document.getElementById('manifestModal').style.display = 'none';
+        };
+    </script>
+
   <div class="app">
     <header>
       <div class="topbar">
