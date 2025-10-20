@@ -1,0 +1,752 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Гримуар Азата — AzatOS Dashboard</title>
+  <meta name="description" content="Интерактивный гримуар — система ревизов, целей и апгрейдов для инженера." />
+  <style>
+    /* ==========================
+       AzatOS — Single-file CSS
+       ========================== */
+    :root{
+      --bg:#0f1724; /* deep navy */
+      --card:#0f1724;
+      --muted:#9aa4b2;
+      --accent:#5eead4; /* teal */
+      --accent-2:#60a5fa; /* blue */
+      --glass: rgba(255,255,255,0.04);
+      --success:#22c55e;
+      --danger:#f43f5e;
+      --card-2:#0b1220;
+      --glass-2: rgba(255,255,255,0.02);
+      --mono: 'Courier New', monospace;
+      color-scheme: dark;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg,#071026 0%, #07121b 60%);
+      color:#e6eef8;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      line-height:1.35;
+      padding:20px;
+    }
+
+    /* layout */
+    .app{
+      max-width:1100px;
+      margin:0 auto;
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:18px;
+      align-items:start;
+    }
+    header{grid-column:1/-1;margin-bottom:8px}
+    .topbar{
+      display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));backdrop-filter: blur(6px);
+      box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+      border:1px solid rgba(255,255,255,0.03);
+    }
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{
+      width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#011; background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      box-shadow:0 6px 18px rgba(96,165,250,0.08), inset 0 -6px 12px rgba(0,0,0,0.25);
+    }
+    .brand h1{font-size:18px;margin:0}
+    .brand p{margin:0;color:var(--muted);font-size:12px}
+
+    /* Sidebar */
+    .sidebar{padding:12px;border-radius:12px;background:linear-gradient(180deg,var(--card),var(--card-2));border:1px solid rgba(255,255,255,0.03);height:calc(100vh - 96px);overflow:auto}
+    .section-title{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:8px 0}
+    .profile{display:flex;gap:12px;align-items:center}
+    .avatar{width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700;background:linear-gradient(180deg,#111827,#0b1220)}
+    .meta small{display:block;color:var(--muted)}
+
+    .nav{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+    .nav button{display:flex;gap:8px;align-items:center;padding:10px;border-radius:8px;border:0;background:transparent;color:inherit;cursor:pointer}
+    .nav button.active{background:linear-gradient(90deg, rgba(96,165,250,0.08), rgba(94,234,212,0.03));border:1px solid rgba(255,255,255,0.02)}
+
+    .card{padding:14px;border-radius:12px;background:linear-gradient(180deg,var(--glass),transparent);border:1px solid rgba(255,255,255,0.03);}
+
+    /* Main content area */
+    .main{height:calc(100vh - 96px);overflow:auto;padding:6px}
+    .columns{display:grid;grid-template-columns:1fr 420px;gap:14px}
+
+    /* dashboard widgets */
+    .row{display:flex;gap:12px}
+    .stat{flex:1;padding:14px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.02)}
+    .stat h3{margin:0;font-size:13px;color:var(--muted)}
+    .stat .value{font-size:22px;margin-top:6px}
+
+    .progress-wrap{background:rgba(255,255,255,0.03);height:10px;border-radius:999px;overflow:hidden;margin-top:10px}
+    .progress-inner{height:100%;width:30%;background:linear-gradient(90deg,var(--accent),var(--accent-2));}
+
+    /* logs */
+    .log-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+    .log-item{padding:10px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);border:1px solid rgba(255,255,255,0.02)}
+    .log-item .meta{font-size:12px;color:var(--muted)}
+
+    /* forms */
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type=text], textarea, select, input[type=number]{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+    textarea{min-height:72px;resize:vertical}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;border:0;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#021124;font-weight:600;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--accent-2)}
+
+    /* projects list */
+    .projects{display:flex;flex-direction:column;gap:8px}
+    .project{padding:10px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);border:1px solid rgba(255,255,255,0.02);display:flex;justify-content:space-between;align-items:center}
+    .project .left{display:flex;gap:10px;align-items:center}
+    .badge{padding:6px 8px;border-radius:999px;font-size:12px}
+    .badge.open{background:rgba(96,165,250,0.08);color:var(--accent-2)}
+    .badge.done{background:rgba(34,197,94,0.08);color:var(--success)}
+
+    /* charts */
+    .chart-card{padding:12px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);border:1px solid rgba(255,255,255,0.02)}
+    canvas{width:100%;height:180px;display:block}
+
+    footer{grid-column:1/-1;margin-top:12px;color:var(--muted);font-size:12px;text-align:center}
+
+    /* small screens */
+    @media (max-width:980px){
+      .app{grid-template-columns:1fr;}
+      .sidebar{height:auto}
+      .columns{grid-template-columns:1fr}
+    }
+
+    /* prettify monospace area */
+    pre{background:rgba(0,0,0,0.2);padding:12px;border-radius:8px;overflow:auto;font-family:var(--mono);font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo">A</div>
+          <div>
+            <h1>Гримуар Азата — AzatOS</h1>
+            <p>Интерактивный гримуар: ревиз, проекты, версии — всё в одном дашборде</p>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <div style="text-align:right">
+            <div style="font-weight:700">Azat 2.0</div>
+            <div style="font-size:12px;color:var(--muted)">Последняя ревизия: <span id="last-rev">—</span></div>
+          </div>
+          <button id="exportBtn" class="btn">Экспорт</button>
+        </div>
+      </div>
+    </header>
+
+    <aside class="sidebar card">
+      <div class="profile">
+        <div class="avatar">A</div>
+        <div class="meta">
+          <div style="font-weight:700">Азат</div>
+          <small>Инженер — версия 2.0</small>
+        </div>
+      </div>
+
+      <div class="section-title">Навигация</div>
+      <nav class="nav" id="nav">
+        <button data-view="dashboard" class="active">Панель</button>
+        <button data-view="daily">Дневник дня</button>
+        <button data-view="projects">Проекты</button>
+        <button data-view="goals">Цели</button>
+        <button data-view="versions">Версии</button>
+        <button data-view="stats">Аналитика</button>
+        <button data-view="settings">Настройки</button>
+      </nav>
+
+      <div class="section-title">Кратко</div>
+      <div style="display:grid;gap:8px">
+        <div class="card">
+          <div style="font-size:13px;color:var(--muted)">GPA</div>
+          <div style="font-weight:700">3.8 <small style="color:var(--muted)">(цель)</small></div>
+        </div>
+        <div class="card">
+          <div style="font-size:13px;color:var(--muted)">Английский</div>
+          <div style="font-weight:700">C1 <small style="color:var(--muted)">(цель)</small></div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button id="newRevBtn" class="btn">Добавить ревиз</button>
+        <button id="quickBtn" class="btn ghost">Быстрая заметка</button>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="section-title">Достижения</div>
+        <div style="display:flex;gap:8px;flex-direction:column">
+          <div class="badge open">Без телефона до 12:00 — 3 дня</div>
+          <div class="badge open">Мини-проекты — 2/3</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main card">
+      <!-- Views container -->
+      <div id="views">
+        <!-- Dashboard -->
+        <section id="dashboard" class="view">
+          <div class="columns">
+            <div>
+              <div class="row">
+                <div class="stat card">
+                  <h3>Ежедневная продуктивность</h3>
+                  <div class="value" id="today-percent">— %</div>
+                  <div class="progress-wrap"><div class="progress-inner" id="today-progress" style="width:0%"></div></div>
+                </div>
+                <div class="stat card">
+                  <h3>Версия</h3>
+                  <div class="value" id="version-name">Azat 2.0</div>
+                  <div style="font-size:12px;color:var(--muted);margin-top:6px">Апгрейдов: <span id="version-count">0</span></div>
+                </div>
+              </div>
+
+              <div style="margin-top:12px" class="card">
+                <h3 style="margin:0 0 10px 0">Недавние ревизы</h3>
+                <div id="recent-logs" class="log-list"></div>
+              </div>
+
+              <div style="margin-top:12px" class="card chart-card">
+                <h3 style="margin:0 0 10px 0">Продуктивность за 14 дней</h3>
+                <canvas id="trendChart"></canvas>
+              </div>
+
+            </div>
+
+            <aside>
+              <div class="card">
+                <h3 style="margin:0 0 10px 0">Быстрая ревизия</h3>
+                <div style="display:grid;gap:8px">
+                  <label>Продуктивность 0–100%</label>
+                  <input id="quickPercent" type="number" min="0" max="100" value="70">
+                  <label>Короткая заметка</label>
+                  <input id="quickNote" type="text" placeholder="Что сделал сегодня?">
+                  <div style="display:flex;gap:8px">
+                    <button id="quickSave" class="btn">Сохранить</button>
+                    <button id="quickDiscard" class="btn ghost">Очистить</button>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top:12px" class="card">
+                <h3 style="margin:0 0 10px 0">Статусы целей</h3>
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <div style="display:flex;justify-content:space-between;align-items:center"><div>GPA</div><div id="goal-gpa">3.8</div></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center"><div>Английский</div><div id="goal-eng">C1</div></div>
+                  <div style="display:flex;justify-content:space-between;align-items:center"><div>Проекты</div><div id="goal-proj">1 / 3</div></div>
+                </div>
+              </div>
+
+            </aside>
+          </div>
+        </section>
+
+        <!-- Daily log -->
+        <section id="daily" class="view" style="display:none">
+          <div class="row">
+            <div style="flex:1">
+              <div class="card">
+                <h3>Добавить ревиз</h3>
+                <div style="display:grid;gap:8px">
+                  <label>Дата</label>
+                  <input id="revDate" type="text" placeholder="YYYY-MM-DD">
+                  <label>Продуктивность 0–10</label>
+                  <input id="revProd" type="number" min="0" max="10" value="7">
+                  <label>Что сделал</label>
+                  <textarea id="revDone" placeholder="Кратко: задачи, знания, проекты"></textarea>
+                  <label>Что не получилось</label>
+                  <textarea id="revFail" placeholder="Кратко: баги, причины"></textarea>
+                  <label>Инсайт дня</label>
+                  <input id="revInsight" type="text" placeholder="Главный вывод">
+                  <label>Физическое состояние 0–10</label>
+                  <input id="revHealth" type="number" min="0" max="10" value="8">
+                  <div style="display:flex;gap:8px">
+                    <button id="saveRev" class="btn">Сохранить ревиз</button>
+                    <button id="clearRev" class="btn ghost">Очистить форму</button>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top:12px" class="card">
+                <h3>Лист ревизов</h3>
+                <div id="logList" class="log-list"></div>
+              </div>
+            </div>
+
+            <aside style="width:360px">
+              <div class="card">
+                <h3>Шаблоны</h3>
+                <p style="color:var(--muted);font-size:13px">Готовые формы для ревиза. Копируй и редактируй.</p>
+                <pre id="template">Дата: {date}\nПродуктивность: {prod}/10\nЧто сделал: \nЧто не получилось: \nИнсайт: \nФизическое состояние: {health}/10</pre>
+                <button id="applyTemplate" class="btn ghost">Вставить в форму</button>
+              </div>
+
+              <div style="margin-top:12px" class="card">
+                <h3>Краткая статистика</h3>
+                <div style="display:grid;gap:6px">
+                  <div>Средняя продуктивность: <strong id="avgProd">—</strong></div>
+                  <div>Дней в системе: <strong id="daysCount">—</strong></div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- Projects -->
+        <section id="projects" class="view" style="display:none">
+          <div class="row">
+            <div style="flex:1">
+              <div class="card">
+                <h3>Создать проект</h3>
+                <div style="display:grid;gap:8px">
+                  <label>Название</label>
+                  <input id="projName" type="text" placeholder="Например: PLC-MiniProject">
+                  <label>Описание</label>
+                  <textarea id="projDesc" placeholder="Кратко: цель, результат"></textarea>
+                  <label>Цель (% готовности)</label>
+                  <input id="projGoal" type="number" min="0" max="100" value="0">
+                  <div style="display:flex;gap:8px">
+                    <button id="addProj" class="btn">Добавить проект</button>
+                    <button id="importProj" class="btn ghost">Импорт</button>
+                  </div>
+                </div>
+              </div>
+
+              <div style="margin-top:12px" class="card">
+                <h3>Список проектов</h3>
+                <div id="projectsList" class="projects"></div>
+              </div>
+            </div>
+
+            <aside style="width:360px">
+              <div class="card">
+                <h3>Шаблон проекта</h3>
+                <pre>Название: {name}\nОписание: {desc}\nЦель: {goal}%\nСтатус: open/done</pre>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- Goals -->
+        <section id="goals" class="view" style="display:none">
+          <div class="card">
+            <h3>Цели (управляемые и отслеживаемые)</h3>
+            <div style="display:grid;gap:8px">
+              <label>GPA (цель)</label>
+              <input id="gpaTarget" type="text" value="3.8">
+              <label>Английский</label>
+              <input id="engTarget" type="text" value="C1">
+              <label>Проекты — число серьёзных</label>
+              <input id="projTarget" type="number" value="1" min="0">
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button id="saveGoals" class="btn">Сохранить цели</button>
+                <button id="resetGoals" class="btn ghost">Сбросить</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Versions -->
+        <section id="versions" class="view" style="display:none">
+          <div class="row">
+            <div style="flex:1">
+              <div class="card">
+                <h3>Архив версий</h3>
+                <div id="versionsList"></div>
+              </div>
+
+              <div style="margin-top:12px" class="card">
+                <h3>Создать новую версию</h3>
+                <div style="display:grid;gap:8px">
+                  <label>Название версии</label>
+                  <input id="verName" type="text" value="Azat 2.1">
+                  <label>Краткое описание изменений</label>
+                  <textarea id="verDesc"></textarea>
+                  <div style="display:flex;gap:8px">
+                    <button id="createVer" class="btn">Создать</button>
+                    <button id="revertVer" class="btn ghost">Откатить на...</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <aside style="width:360px">
+              <div class="card">
+                <h3>Правила версий</h3>
+                <ol style="color:var(--muted);padding-left:18px">
+                  <li>Каждая версия — список апгрейдов и багов, исправленных в себе.</li>
+                  <li>Версия фиксируется ежемесячно или при значимом прогрессе.</li>
+                  <li>Названия: семантика вида "Azat X.Y"</li>
+                </ol>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- Stats -->
+        <section id="stats" class="view" style="display:none">
+          <div class="card">
+            <h3>Аналитика и экспорт</h3>
+            <div style="display:grid;gap:8px">
+              <div>Средняя продуктивность: <strong id="statAvg">—</strong></div>
+              <div>Тренд: <strong id="statTrend">—</strong></div>
+              <div style="margin-top:8px">
+                <button id="downloadCsv" class="btn">Скачать CSV</button>
+                <button id="downloadJson" class="btn ghost">Скачать JSON</button>
+              </div>
+            </div>
+            <div style="margin-top:12px" class="chart-card">
+              <h4>Гистограмма продуктивности</h4>
+              <canvas id="histCanvas"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <!-- Settings -->
+        <section id="settings" class="view" style="display:none">
+          <div class="card">
+            <h3>Настройки</h3>
+            <div style="display:grid;gap:8px">
+              <label>Имя</label>
+              <input id="userName" type="text" value="Азат">
+              <label>Начальная версия</label>
+              <input id="initVer" type="text" value="Azat 2.0">
+              <label>Автосохранение</label>
+              <select id="autosave">
+                <option value="on">Вкл</option>
+                <option value="off">Выкл</option>
+              </select>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button id="saveSettings" class="btn">Сохранить настройки</button>
+                <button id="clearAll" class="btn ghost">Сбросить все данные</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <footer>
+        AzatOS — твой инженерный гримуар. Данные хранятся локально в браузере. Сделай резервную копию через экспорт.
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // ==========================
+    // AzatOS — Single-file JS
+    // ==========================
+
+    // Simple localStorage-based DB
+    const DB_KEY = 'azatos_v1';
+    const DEFAULT = {
+      settings: {name: 'Азат', initVer: 'Azat 2.0', autosave: 'on'},
+      goals: {gpa: '3.8', eng: 'C1', proj: 1},
+      versions: [{name:'Azat 2.0', desc:'Initial manifest', date: new Date().toISOString(), id: genId()}],
+      revs: [],
+      projects: []
+    };
+
+    function genId(){ return 'id_' + Math.random().toString(36).slice(2,9) }
+
+    function load(){
+      try{
+        const raw = localStorage.getItem(DB_KEY);
+        return raw ? JSON.parse(raw) : DEFAULT;
+      }catch(e){console.error('load err',e);return DEFAULT}
+    }
+    function save(db){
+      localStorage.setItem(DB_KEY, JSON.stringify(db));
+      renderAll();
+    }
+
+    let DB = load();
+
+    // === UI helpers ===
+    function qs(sel, root=document) { return root.querySelector(sel) }
+    function qsa(sel, root=document) { return Array.from(root.querySelectorAll(sel)) }
+
+    // Navigation
+    qsa('.nav button').forEach(btn=>btn.addEventListener('click',()=>{
+      qsa('.nav button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      showView(btn.dataset.view);
+    }))
+
+    function showView(name){
+      qsa('.view').forEach(v=>v.style.display='none');
+      const el = qs('#'+name);
+      if(el) el.style.display='block';
+      window.scrollTo(0,0);
+    }
+
+    // initial view
+    showView('dashboard');
+
+    // Quick add
+    qs('#newRevBtn').addEventListener('click',()=>{
+      showView('daily');
+      const d = new Date().toISOString().slice(0,10);
+      qs('#revDate').value = d;
+    })
+
+    qs('#quickSave').addEventListener('click',()=>{
+      const p = Number(qs('#quickPercent').value)||0;
+      const note = qs('#quickNote').value || '';
+      const rev = {id: genId(), date: new Date().toISOString().slice(0,10), prod: Math.round(p/10), note, health:8};
+      DB.revs.unshift(rev);
+      save(DB);
+      qs('#quickNote').value='';
+      notify('Ревиз сохранён');
+    })
+    qs('#quickDiscard').addEventListener('click',()=>{qs('#quickNote').value='';qs('#quickPercent').value=70})
+
+    // Daily save
+    qs('#saveRev').addEventListener('click',()=>{
+      const date = qs('#revDate').value || new Date().toISOString().slice(0,10);
+      const prod = Number(qs('#revProd').value) || 0;
+      const done = qs('#revDone').value || '';
+      const fail = qs('#revFail').value || '';
+      const insight = qs('#revInsight').value || '';
+      const health = Number(qs('#revHealth').value) || 0;
+      const rev = {id: genId(), date, prod, done, fail, insight, health};
+      DB.revs.unshift(rev);
+      save(DB);
+      notify('Ревиз добавлен');
+      clearRevForm();
+    })
+    qs('#clearRev').addEventListener('click',clearRevForm);
+
+    function clearRevForm(){
+      ['#revDate','#revProd','#revDone','#revFail','#revInsight','#revHealth'].forEach(s=>qs(s).value='');
+    }
+
+    // Template
+    qs('#applyTemplate').addEventListener('click',()=>{
+      const t = qs('#template').innerText;
+      qs('#revDone').value = t.replace('{date}', new Date().toISOString().slice(0,10)).replace('{prod}','7').replace('{health}','8');
+      notify('Шаблон применён');
+    })
+
+    // Projects
+    qs('#addProj').addEventListener('click',()=>{
+      const name = qs('#projName').value.trim();
+      if(!name){notify('Введите имя проекта', true);return}
+      const desc = qs('#projDesc').value.trim();
+      const goal = Number(qs('#projGoal').value)||0;
+      const project = {id:genId(), name, desc, goal, status:'open'};
+      DB.projects.push(project);
+      save(DB);
+      qs('#projName').value='';qs('#projDesc').value='';qs('#projGoal').value=0;
+      notify('Проект добавлен');
+    })
+
+    // Goals
+    qs('#saveGoals').addEventListener('click',()=>{
+      DB.goals.gpa = qs('#gpaTarget').value;
+      DB.goals.eng = qs('#engTarget').value;
+      DB.goals.proj = Number(qs('#projTarget').value)||0;
+      save(DB);
+      notify('Цели сохранены');
+    })
+    qs('#resetGoals').addEventListener('click',()=>{DB.goals = DEFAULT.goals; save(DB);notify('Цели сброшены')})
+
+    // Versions
+    qs('#createVer').addEventListener('click',()=>{
+      const name = qs('#verName').value || ('Azat ' + Math.floor(Math.random()*10)+'.0');
+      const desc = qs('#verDesc').value || '';
+      const v = {id:genId(), name, desc, date:new Date().toISOString()};
+      DB.versions.unshift(v);
+      save(DB);
+      qs('#verDesc').value='';
+      notify('Версия создана');
+    })
+
+    // Settings
+    qs('#saveSettings').addEventListener('click',()=>{
+      DB.settings.name = qs('#userName').value || 'Азат';
+      DB.settings.initVer = qs('#initVer').value || 'Azat 2.0';
+      DB.settings.autosave = qs('#autosave').value;
+      save(DB);
+      notify('Настройки сохранены');
+    })
+    qs('#clearAll').addEventListener('click',()=>{
+      if(!confirm('Удалить все данные? Это необратимо.')) return;
+      localStorage.removeItem(DB_KEY);
+      DB = JSON.parse(JSON.stringify(DEFAULT));
+      save(DB);
+      notify('Данные сброшены');
+    })
+
+    // Export
+    qs('#exportBtn').addEventListener('click',()=>{downloadJson(); notify('Экспорт начат')})
+    qs('#downloadJson').addEventListener('click',downloadJson)
+    qs('#downloadCsv').addEventListener('click',downloadCsv)
+
+    function downloadJson(){
+      const blob = new Blob([JSON.stringify(DB, null, 2)],{type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'azatos_export_'+new Date().toISOString().slice(0,10)+'.json'; a.click(); URL.revokeObjectURL(url);
+    }
+
+    function downloadCsv(){
+      // simple CSV of revs
+      const rows = [['date','prod','done','fail','insight','health']];
+      DB.revs.forEach(r=>rows.push([r.date||'',r.prod||'', '"'+(r.done||'').replace(/\"/g,'"')+'"', '"'+(r.fail||'').replace(/\"/g,'"')+'"', '"'+(r.insight||'')+'"', r.health||'']));
+      const csv = rows.map(r=>r.join(',')).join('\n');
+      const blob = new Blob([csv],{type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'azatos_revs_'+new Date().toISOString().slice(0,10)+'.csv'; a.click(); URL.revokeObjectURL(url);
+    }
+
+    // Renderers
+    function renderAll(){
+      // settings
+      qs('#userName').value = DB.settings.name || 'Азат';
+      qs('#initVer').value = DB.settings.initVer || 'Azat 2.0';
+      qs('#autosave').value = DB.settings.autosave || 'on';
+
+      qs('#version-name').innerText = DB.versions[0]?.name || 'Azat 2.0';
+      qs('#version-count').innerText = DB.versions.length;
+      qs('#last-rev').innerText = DB.revs[0]?.date || '—';
+
+      // recent logs
+      const recent = qs('#recent-logs'); recent.innerHTML='';
+      DB.revs.slice(0,6).forEach(r=>{
+        const it = document.createElement('div'); it.className='log-item';
+        it.innerHTML = `<div style="display:flex;justify-content:space-between"><strong>${r.date}</strong><small style='color:var(--muted)'>prod:${r.prod}/10</small></div><div style='margin-top:6px;color:var(--muted)'>${(r.done||r.note||'—')}</div>`;
+        recent.appendChild(it);
+      })
+
+
+
+
+      // log list
+      const logList = qs('#logList'); logList.innerHTML='';
+      DB.revs.forEach(r=>{
+        const e = document.createElement('div'); e.className='log-item';
+        e.innerHTML = `<div style="display:flex;justify-content:space-between"><div><strong>${r.date}</strong><div class='meta' style='color:var(--muted)'>insight: ${r.insight||'—'}</div></div><div style='text-align:right'><small style='color:var(--muted)'>prod ${r.prod}/10</small><div style='margin-top:6px'><button data-id='${r.id}' class='btn ghost small delRev'>Удалить</button></div></div></div><div style='margin-top:8px;color:var(--muted)'>${(r.done||r.note||'—')}</div>`;
+        logList.appendChild(e);
+      })
+      qsa('.delRev').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.id;DB.revs=DB.revs.filter(rr=>rr.id!==id);save(DB);notify('Ревиз удалён')}))
+
+      // projects
+      const pList = qs('#projectsList'); pList.innerHTML='';
+      DB.projects.forEach(p=>{
+        const it = document.createElement('div'); it.className='project';
+        it.innerHTML = `<div class='left'><div style='width:12px;height:12px;border-radius:4px;background:${p.status==='done'? 'var(--success)':'var(--accent)'}'></div><div><strong>${p.name}</strong><div style='font-size:12px;color:var(--muted)'>${p.desc||''}</div></div></div><div style='display:flex;gap:8px;align-items:center'><div style='font-weight:700'>${p.goal}%</div><button data-id='${p.id}' class='btn ghost markDone'>✓</button><button data-id='${p.id}' class='btn ghost delProj'>✕</button></div>`;
+        pList.appendChild(it);
+      })
+      qsa('.delProj').forEach(b=>b.addEventListener('click',()=>{DB.projects=DB.projects.filter(p=>p.id!==b.dataset.id);save(DB);notify('Проект удалён')}))
+      qsa('.markDone').forEach(b=>b.addEventListener('click',()=>{const p=DB.projects.find(pp=>pp.id===b.dataset.id);if(p){p.status='done';save(DB);notify('Проект отмечен как выполненный')}}))
+
+      // versions
+      const verEl = qs('#versionsList'); verEl.innerHTML='';
+      DB.versions.forEach(v=>{
+        const e = document.createElement('div'); e.className='log-item';
+        e.innerHTML = `<div style='display:flex;justify-content:space-between'><strong>${v.name}</strong><small style='color:var(--muted)'>${new Date(v.date).toLocaleString()}</small></div><div style='margin-top:6px;color:var(--muted)'>${v.desc||'—'}</div>`;
+        verEl.appendChild(e);
+      })
+
+      // stats
+      renderStats();
+
+      // dashboard numbers
+      const today = DB.revs[0];
+      if(today){
+        const pct = Math.round((today.prod||0) * 10);
+        qs('#today-percent').innerText = pct + ' %';
+        qs('#today-progress').style.width = pct + '%';
+      } else { qs('#today-percent').innerText = '— %'; qs('#today-progress').style.width='0%'}
+
+      qs('#goal-gpa').innerText = DB.goals.gpa;
+      qs('#goal-eng').innerText = DB.goals.eng;
+      qs('#goal-proj').innerText = `${DB.projects.filter(p=>p.status!=='done').length} / ${DB.goals.proj}`;
+
+      // charts
+      drawTrendChart(); drawHist();
+    }
+
+    function renderStats(){
+      const avg = DB.revs.length ? (DB.revs.reduce((s,r)=>s+(r.prod||0),0)/DB.revs.length).toFixed(2) : '—';
+      qs('#avgProd').innerText = avg === '—' ? '—' : (avg+' /10');
+      qs('#daysCount').innerText = DB.revs.length || '0';
+      qs('#statAvg').innerText = avg === '—' ? '—' : (avg + ' /10');
+      // trend (simple slope)
+      if(DB.revs.length>2){
+        const y = DB.revs.map((r,i)=>r.prod||0).slice(0,14).reverse();
+        const x = y.map((_,i)=>i);
+        const n = x.length;
+        const avgx = x.reduce((a,b)=>a+b,0)/n; const avgy = y.reduce((a,b)=>a+b,0)/n;
+        const num = x.reduce((s,xi,i)=>s + (xi-avgx)*(y[i]-avgy),0);
+        const den = x.reduce((s,xi)=>s + (xi-avgx)*(xi-avgx),0) || 1;
+        const slope = num/den;
+        qs('#statTrend').innerText = slope.toFixed(2) + ' (slope)';
+      } else qs('#statTrend').innerText = '—';
+    }
+
+    // notifications (very tiny)
+    function notify(text, isErr=false){
+      const n = document.createElement('div'); n.style.position='fixed'; n.style.right='20px'; n.style.bottom='20px'; n.style.background='linear-gradient(90deg,var(--accent),var(--accent-2))'; n.style.color='#021124'; n.style.padding='10px 12px'; n.style.borderRadius='10px'; n.style.boxShadow='0 10px 30px rgba(2,6,23,0.6)'; n.innerText = text;
+      document.body.appendChild(n);
+      setTimeout(()=>{n.style.opacity='0'; setTimeout(()=>n.remove(),300)},2000);
+    }
+
+    // charts (Canvas simple)
+    function drawTrendChart(){
+      const canvas = qs('#trendChart'); const ctx = canvas.getContext('2d');
+      canvas.width = canvas.clientWidth * devicePixelRatio; canvas.height = 180 * devicePixelRatio; ctx.scale(devicePixelRatio, devicePixelRatio);
+      // clear
+      ctx.clearRect(0,0,canvas.clientWidth,180);
+      // data
+      const series = DB.revs.slice(0,14).map(r=>r.prod||0).reverse();
+      const w = canvas.clientWidth; const h=180; const pad=24; ctx.lineWidth=2;
+      // axes
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.beginPath(); ctx.moveTo(pad,h-pad); ctx.lineTo(w-pad,h-pad); ctx.stroke();
+      // draw polyline
+      if(series.length===0) return;
+      const max = Math.max(...series,10); const min = Math.min(...series,0);
+      ctx.beginPath(); ctx.strokeStyle = 'rgba(96,165,250,0.9)';
+      series.forEach((v,i)=>{
+        const x = pad + (i/(series.length-1||1))*(w-pad*2);
+        const y = pad + (1-(v-min)/(max-min||1))*(h-pad*2);
+        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      })
+      ctx.stroke();
+    }
+
+    function drawHist(){
+      const canvas = qs('#histCanvas'); const ctx = canvas.getContext('2d');
+      canvas.width = canvas.clientWidth*devicePixelRatio; canvas.height = 180*devicePixelRatio; ctx.scale(devicePixelRatio, devicePixelRatio);
+      ctx.clearRect(0,0,canvas.clientWidth,180);
+      const bins = new Array(10).fill(0);
+      DB.revs.forEach(r=>{const idx=Math.min(9,Math.max(0,Math.floor((r.prod||0)))); bins[idx]++});
+      const w = canvas.clientWidth; const h=180; const pad=20;
+      const max = Math.max(...bins,1);
+      const barW = (w-pad*2)/bins.length;
+      bins.forEach((b,i)=>{const x=pad+i*barW; const barH=(b/max)*(h-pad*2); ctx.fillStyle='rgba(94,234,212,0.8)'; ctx.fillRect(x, h-pad-barH, barW*0.8, barH);})
+    }
+
+    // autosave every X seconds if enabled
+    setInterval(()=>{ if(DB.settings.autosave==='on'){ save(DB) } }, 1000*60*5);
+
+    // simple re-render on load
+    renderAll();
+
+    // helper: when page first loaded, if no data, populate sample points for demo
+    if(DB.revs.length===0){
+      for(let i=0;i<7;i++){DB.revs.push({id:genId(), date: new Date(Date.now()-i*86400000).toISOString().slice(0,10), prod: Math.max(3, Math.round(7 + Math.sin(i)*2)), done:'', insight:'', health:7});}
+      save(DB);
+    }
+
+  </script>
+</body>
+</html>
